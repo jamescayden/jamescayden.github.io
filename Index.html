@@ -1,0 +1,119 @@
+<!-- IntScraper - GitHub Pages Functional Version (Public APIs Only) --><!DOCTYPE html><html>
+<head>
+<meta charset="UTF-8">
+<title>IntScraper</title>
+<style>
+body{margin:0;font-family:monospace;background:black;color:cyan;overflow:hidden}
+h1{text-align:center;margin-top:100px;font-size:60px;text-shadow:0 0 25px cyan}
+.center{text-align:center}
+button{padding:12px 30px;margin:15px;background:black;border:1px solid cyan;color:cyan;border-radius:15px;box-shadow:0 0 15px cyan;cursor:pointer;transition:.3s}
+button:hover{background:cyan;color:black;box-shadow:0 0 30px cyan}
+#sidebar{position:fixed;left:-300px;top:0;height:100%;width:300px;background:#050505;border-right:1px solid cyan;box-shadow:0 0 30px cyan;transition:.6s;padding:20px;overflow-y:auto}
+#sidebar.open{left:0}
+.tool{padding:10px;margin:8px 0;border-bottom:1px solid cyan;cursor:pointer}
+#content{margin-left:0;padding:40px;transition:.6s}
+input{padding:10px;width:60%;border-radius:10px;border:1px solid cyan;background:black;color:cyan;box-shadow:0 0 15px cyan}
+.hidden{display:none}
+#results{margin-top:20px;padding:20px;border:1px solid cyan;border-radius:15px;box-shadow:0 0 20px cyan;max-height:300px;overflow:auto}
+</style>
+</head>
+<body><div id="landing">
+<h1>⚡ IntScraper ⚡</h1>
+<div class="center">
+<button onclick="showPricing()">💰 Pricing</button>
+<button onclick="showContact()">✉ Contact Admin</button>
+<button onclick="showLogin()">🔐 Login</button>
+</div>
+</div><div id="pricing" class="hidden center">
+<h2>Pricing</h2>
+<p>Contact admin to purchase and receive your 7-character key.</p>
+<button onclick="goHome()">Back</button>
+</div><div id="contact" class="hidden center">
+<h2>Contact Admin</h2>
+<input placeholder="Your Email"><br><br>
+<input placeholder="Message"><br><br>
+<button onclick="alert('Message sent (demo)')">Send</button>
+<button onclick="goHome()">Back</button>
+</div><div id="login" class="hidden center">
+<h2>Login</h2>
+<input id="username" placeholder="Username"><br><br>
+<input id="key" placeholder="Access Key"><br><br>
+<button onclick="login()">Enter</button>
+<button onclick="goHome()">Back</button>
+</div><div id="dashboard" class="hidden">
+<div id="sidebar">
+<button onclick="toggleMenu()">☰</button>
+<div class="tool" onclick="setTool('wiki')">Wikipedia Search</div>
+<div class="tool" onclick="setTool('ip')">IP Lookup</div>
+<div class="tool" onclick="setTool('domain')">Domain Lookup</div>
+<div class="tool" onclick="setTool('geo')">Geo Search</div>
+</div><div id="content">
+<button onclick="toggleMenu()">☰ Menu</button>
+<h2 id="toolTitle">OSINT Tool</h2>
+<input id="query" placeholder="Enter search query">
+<button onclick="runSearch()">Search</button>
+<div id="results">Results will display here.</div>
+</div>
+</div><script>
+let currentTool = "";
+
+function hideAll(){
+document.getElementById('landing').classList.add('hidden');
+document.getElementById('pricing').classList.add('hidden');
+document.getElementById('contact').classList.add('hidden');
+document.getElementById('login').classList.add('hidden');}
+
+function goHome(){hideAll();document.getElementById('landing').classList.remove('hidden');}
+function showPricing(){hideAll();document.getElementById('pricing').classList.remove('hidden');}
+function showContact(){hideAll();document.getElementById('contact').classList.remove('hidden');}
+function showLogin(){hideAll();document.getElementById('login').classList.remove('hidden');}
+
+function login(){
+let user=document.getElementById('username').value;
+let key=document.getElementById('key').value;
+if(user==='admin'&&key==='123qwe'){enterDashboard();}
+else if(/^[a-zA-Z0-9]{7}$/.test(key)){enterDashboard();}
+else{alert('Invalid Key');}}
+
+function enterDashboard(){hideAll();document.getElementById('dashboard').classList.remove('hidden');}
+function toggleMenu(){document.getElementById('sidebar').classList.toggle('open');}
+function setTool(tool){currentTool=tool;document.getElementById('toolTitle').innerText=tool.toUpperCase()+" Tool";}
+
+async function runSearch(){
+let q=document.getElementById('query').value;
+let results=document.getElementById('results');
+results.innerHTML="Loading...";
+
+try{
+if(currentTool==='wiki'){
+let res=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${q}`);
+let data=await res.json();
+results.innerHTML=`<h3>${data.title}</h3><p>${data.extract}</p>`;
+}
+
+else if(currentTool==='ip'){
+let res=await fetch(`https://ipapi.co/${q}/json/`);
+let data=await res.json();
+results.innerHTML=`IP: ${data.ip}<br>City: ${data.city}<br>Region: ${data.region}<br>Country: ${data.country_name}<br>Org: ${data.org}`;
+}
+
+else if(currentTool==='domain'){
+let res=await fetch(`https://rdap.org/domain/${q}`);
+let data=await res.json();
+results.innerHTML=`Domain: ${data.ldhName}<br>Status: ${data.status}<br>Registrar: ${data.entities?data.entities[0].vcardArray[1][1][3]:''}`;
+}
+
+else if(currentTool==='geo'){
+let res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}`);
+let data=await res.json();
+if(data[0]){
+results.innerHTML=`Display Name: ${data[0].display_name}<br>Lat: ${data[0].lat}<br>Lon: ${data[0].lon}`;
+}else{results.innerHTML='No results found';}
+}
+
+else{results.innerHTML="Select a tool first.";}
+
+}catch(e){results.innerHTML="Error retrieving data.";}
+}
+</script></body>
+</html>
